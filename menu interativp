@@ -1,0 +1,284 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_CIDADE 50
+#define MAX_CODIGO 5
+
+// Estrutura para representar uma carta do Super Trunfo
+struct Carta {
+    char estado;
+    char codigo[MAX_CODIGO];
+    char cidade[MAX_CIDADE];
+    int populacao;
+    float area;
+    float pib;
+    int pontos_turisticos;
+};
+
+// Função para limpar o buffer de entrada
+void limparBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+// Função para validar o estado (A-H)
+int validarEstado(char estado) {
+    estado = toupper(estado);
+    return (estado >= 'A' && estado <= 'H');
+}
+
+// Função para validar o código da carta
+int validarCodigo(char codigo[], char estado) {
+    if (strlen(codigo) != 3) return 0;
+    
+    // Verifica se a primeira letra é o estado correto
+    if (toupper(codigo[0]) != toupper(estado)) return 0;
+    
+    // Verifica se os dois últimos caracteres são dígitos
+    if (!isdigit(codigo[1]) || !isdigit(codigo[2])) return 0;
+    
+    // Converte os dígitos para número e verifica se está entre 01-04
+    int numero = (codigo[1] - '0') * 10 + (codigo[2] - '0');
+    return (numero >= 1 && numero <= 4);
+}
+
+// Função para ler uma carta do usuário
+void lerCarta(struct Carta *carta, int numero_carta) {
+    printf("\n=== DADOS DA CARTA %d ===\n", numero_carta);
+    
+    // Ler estado
+    do {
+        printf("Estado (A-H): ");
+        scanf(" %c", &carta->estado);
+        limparBuffer();
+        
+        if (!validarEstado(carta->estado)) {
+            printf("Estado inválido! Digite uma letra de A a H.\n");
+        }
+    } while (!validarEstado(carta->estado));
+    
+    // Converter estado para maiúsculo
+    carta->estado = toupper(carta->estado);
+    
+    // Ler código da carta
+    do {
+        printf("Código da Carta (ex: %c01): ", carta->estado);
+        scanf("%3s", carta->codigo);
+        limparBuffer();
+        
+        if (!validarCodigo(carta->codigo, carta->estado)) {
+            printf("Código inválido! Use o formato: %c seguido de 01-04 (ex: %c02).\n", 
+                   carta->estado, carta->estado);
+        }
+    } while (!validarCodigo(carta->codigo, carta->estado));
+    
+    // Ler nome da cidade
+    printf("Nome da Cidade: ");
+    fgets(carta->cidade, MAX_CIDADE, stdin);
+    carta->cidade[strcspn(carta->cidade, "\n")] = '\0'; // Remove o \n
+    
+    // Ler população
+    printf("População: ");
+    scanf("%d", &carta->populacao);
+    
+    // Ler área
+    printf("Área (em km²): ");
+    scanf("%f", &carta->area);
+    
+    // Ler PIB
+    printf("PIB: ");
+    scanf("%f", &carta->pib);
+    
+    // Ler número de pontos turísticos
+    printf("Número de Pontos Turísticos: ");
+    scanf("%d", &carta->pontos_turisticos);
+    
+    limparBuffer(); // Limpar buffer após o último scanf
+}
+
+// Função para exibir uma carta
+void exibirCarta(struct Carta *carta, int numero_carta) {
+    printf("\n=== CARTA %d ===\n", numero_carta);
+    printf("Estado: %c\n", carta->estado);
+    printf("Código: %s\n", carta->codigo);
+    printf("Cidade: %s\n", carta->cidade);
+    printf("População: %d habitantes\n", carta->populacao);
+    printf("Área: %.2f km²\n", carta->area);
+    printf("PIB: %.2f\n", carta->pib);
+    printf("Pontos Turísticos: %d\n", carta->pontos_turisticos);
+}
+
+// Função para calcular densidade populacional
+float calcularDensidade(struct Carta *carta) {
+    if (carta->area == 0) return 0; // Evita divisão por zero
+    return (float)carta->populacao / carta->area;
+}
+
+// Função para exibir o menu de opções
+void exibirMenu() {
+    printf("\n=== MENU DE COMPARAÇÃO - SUPER TRUNFO ===\n");
+    printf("Escolha o atributo para comparar as cartas:\n");
+    printf("1 - POPULAÇÃO\n");
+    printf("2 - ÁREA\n");
+    printf("3 - PIB\n");
+    printf("4 - PONTOS TURÍSTICOS\n");
+    printf("5 - DENSIDADE DEMOGRÁFICA\n");
+    printf("0 - SAIR DO JOGO\n");
+    printf("Digite sua opção (0-5): ");
+}
+
+// Função para comparar duas cartas baseado na opção escolhida
+void compararCartas(struct Carta *carta1, struct Carta *carta2, int opcao) {
+    printf("\n=== RESULTADO DA COMPARAÇÃO ===\n");
+    
+    // Variáveis para armazenar os valores comparados
+    float valor1, valor2;
+    const char* nomeAtributo = "";
+    int menorVence = 0; // Flag para indicar se menor valor vence (usado para densidade)
+    
+    // Estrutura switch para determinar qual atributo comparar
+    switch(opcao) {
+        case 1: // POPULAÇÃO
+            valor1 = carta1->populacao;
+            valor2 = carta2->populacao;
+            nomeAtributo = "POPULAÇÃO";
+            printf("Comparação por POPULAÇÃO:\n");
+            printf("Carta 1 - %s (%c): %d habitantes\n", carta1->cidade, carta1->estado, carta1->populacao);
+            printf("Carta 2 - %s (%c): %d habitantes\n", carta2->cidade, carta2->estado, carta2->populacao);
+            break;
+            
+        case 2: // ÁREA
+            valor1 = carta1->area;
+            valor2 = carta2->area;
+            nomeAtributo = "ÁREA";
+            printf("Comparação por ÁREA:\n");
+            printf("Carta 1 - %s (%c): %.2f km²\n", carta1->cidade, carta1->estado, carta1->area);
+            printf("Carta 2 - %s (%c): %.2f km²\n", carta2->cidade, carta2->estado, carta2->area);
+            break;
+            
+        case 3: // PIB
+            valor1 = carta1->pib;
+            valor2 = carta2->pib;
+            nomeAtributo = "PIB";
+            printf("Comparação por PIB:\n");
+            printf("Carta 1 - %s (%c): %.2f\n", carta1->cidade, carta1->estado, carta1->pib);
+            printf("Carta 2 - %s (%c): %.2f\n", carta2->cidade, carta2->estado, carta2->pib);
+            break;
+            
+        case 4: // PONTOS TURÍSTICOS
+            valor1 = carta1->pontos_turisticos;
+            valor2 = carta2->pontos_turisticos;
+            nomeAtributo = "PONTOS TURÍSTICOS";
+            printf("Comparação por PONTOS TURÍSTICOS:\n");
+            printf("Carta 1 - %s (%c): %d pontos\n", carta1->cidade, carta1->estado, carta1->pontos_turisticos);
+            printf("Carta 2 - %s (%c): %d pontos\n", carta2->cidade, carta2->estado, carta2->pontos_turisticos);
+            break;
+            
+        case 5: // DENSIDADE DEMOGRÁFICA
+            valor1 = calcularDensidade(carta1);
+            valor2 = calcularDensidade(carta2);
+            nomeAtributo = "DENSIDADE DEMOGRÁFICA";
+            menorVence = 1; // Para densidade, menor valor vence
+            printf("Comparação por DENSIDADE DEMOGRÁFICA:\n");
+            printf("Carta 1 - %s (%c): %.2f hab/km²\n", carta1->cidade, carta1->estado, valor1);
+            printf("Carta 2 - %s (%c): %.2f hab/km²\n", carta2->cidade, carta2->estado, valor2);
+            break;
+            
+        default:
+            printf("Opção inválida!\n");
+            return;
+    }
+    
+    // Lógica de comparação usando estruturas if-else aninhadas
+    printf("\n--- RESULTADO FINAL ---\n");
+    
+    if (menorVence) {
+        // Para densidade demográfica: MENOR valor vence
+        if (valor1 < valor2) {
+            printf("✅ Carta 1 (%s) VENCEU a comparação!\n", carta1->cidade);
+            printf("   Motivo: Menor densidade demográfica (%.2f vs %.2f hab/km²)\n", valor1, valor2);
+        } 
+        else if (valor2 < valor1) {
+            printf("✅ Carta 2 (%s) VENCEU a comparação!\n", carta2->cidade);
+            printf("   Motivo: Menor densidade demográfica (%.2f vs %.2f hab/km²)\n", valor2, valor1);
+        }
+        else {
+            printf("⚖️ EMPATE! Ambas as cartas têm a mesma densidade demográfica: %.2f hab/km²\n", valor1);
+        }
+    } 
+    else {
+        // Para outros atributos: MAIOR valor vence
+        if (valor1 > valor2) {
+            printf("✅ Carta 1 (%s) VENCEU a comparação!\n", carta1->cidade);
+            printf("   Motivo: Maior %s (", nomeAtributo);
+            if (opcao == 1) printf("%d vs %d", (int)valor1, (int)valor2);
+            else if (opcao == 4) printf("%d vs %d", (int)valor1, (int)valor2);
+            else printf("%.2f vs %.2f", valor1, valor2);
+            printf(")\n");
+        } 
+        else if (valor2 > valor1) {
+            printf("✅ Carta 2 (%s) VENCEU a comparação!\n", carta2->cidade);
+            printf("   Motivo: Maior %s (", nomeAtributo);
+            if (opcao == 1) printf("%d vs %d", (int)valor2, (int)valor1);
+            else if (opcao == 4) printf("%d vs %d", (int)valor2, (int)valor1);
+            else printf("%.2f vs %.2f", valor2, valor1);
+            printf(")\n");
+        }
+        else {
+            printf("⚖️ EMPATE! Ambas as cartas têm o mesmo valor de %s: ", nomeAtributo);
+            if (opcao == 1 || opcao == 4) printf("%d\n", (int)valor1);
+            else printf("%.2f\n", valor1);
+        }
+    }
+}
+
+int main() {
+    struct Carta carta1, carta2;
+    int opcao;
+    
+    printf("=== SUPER TRUNFO - CADASTRO E COMPARAÇÃO DE CARTAS ===\n");
+    
+    // Ler os dados das duas cartas
+    lerCarta(&carta1, 1);
+    lerCarta(&carta2, 2);
+    
+    // Exibir as cartas cadastradas
+    printf("\n=== CARTAS CADASTRADAS ===\n");
+    exibirCarta(&carta1, 1);
+    exibirCarta(&carta2, 2);
+    
+    // Menu interativo principal
+    do {
+        exibirMenu();
+        scanf("%d", &opcao);
+        limparBuffer();
+        
+        // Estrutura switch para o menu principal
+        switch(opcao) {
+            case 0:
+                printf("\nSaindo do jogo... Obrigado por jogar Super Trunfo!\n");
+                break;
+                
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                compararCartas(&carta1, &carta2, opcao);
+                break;
+                
+            default:
+                printf("Opção inválida! Por favor, digite um número entre 0 e 5.\n");
+                break;
+        }
+        
+        if (opcao != 0) {
+            printf("\nPressione Enter para continuar...");
+            limparBuffer();
+        }
+        
+    } while (opcao != 0);
+    
+    return 0;
+}
